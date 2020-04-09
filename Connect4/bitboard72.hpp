@@ -1,9 +1,7 @@
-﻿#pragma once
-#include <cstdint>
+﻿#include <cstdint>
 #include <string>
 #include <iostream>
 #include <fcntl.h>
-#include <io.h>
 
 //This is a mess but I'll try to comment in a way that it's undersandable
 
@@ -252,29 +250,28 @@ uint16_t getRow(const bitboard72& board, uint8_t row)
 std::wstring to_wstring(const bitboard72& board)
 {
 	std::wstring str = L"    0   1   2   3   4   5   6   7   8   9  10  11  \n";
-	str += L"  ┏━━━┳━━━┳━━━┳━━━┳━━━┳━━━┳━━━┳━━━┳━━━┳━━━┳━━━┳━━━┓\n";
+	str += L"  ┌───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┐\n";
 	for (int i = 0; i < 6; i++)
 	{
-		str += (std::to_wstring(i) + L" ┃");
+		str += (std::to_wstring(i) + L" │");
 		for (int j = 0; j < 12; j++)
 		{
 			if (getCellState(board, i, j))
-				str += L" 1 ┃";
+				str += L" 1 │";
 			else
-				str += L" 0 ┃";
+				str += L" 0 │";
 		}
 		if (i == 5)
-			str += L"\n  ┗━━━┻━━━┻━━━┻━━━┻━━━┻━━━┻━━━┻━━━┻━━━┻━━━┻━━━┻━━━┛\n";
+			str += L"\n  └───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┘\n";
 		else
-			str += L"\n  ┣━━━╋━━━╋━━━╋━━━╋━━━╋━━━╋━━━╋━━━╋━━━╋━━━╋━━━╋━━━┫\n";
+			str += L"\n  ├───┼───┼───┼───┼───┼───┼───┼───┼───┼───┼───┼───┤\n";
 	}
 	str += L"\n";
 	return str;
 }
 void displayConsole(std::wstring str)
 {
-	_setmode(_fileno(stdout), _O_U16TEXT);
-	wprintf(str.c_str());
+	std::wcout<<str;
 }
 
 //Just a test for when I change some stuff, there are better way to test but I didn't want to focus on it right now

@@ -1,5 +1,4 @@
-﻿#pragma once
-#include "bitboard72.hpp"
+﻿#include "bitboard72.hpp"
 #include <algorithm>
 
 /*Links that helped me : 
@@ -215,24 +214,24 @@ private:
 	void displayGameConsole(bitboard72 board_AI, bitboard72 board_Opp)
 	{
 		std::wstring str = L"  0   1   2   3   4   5   6   7   8   9  10  11  \n";
-		str += L"┏━━━┳━━━┳━━━┳━━━┳━━━┳━━━┳━━━┳━━━┳━━━┳━━━┳━━━┳━━━┓\n";
+		str += L"┌───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┐\n";
 		for (int i = 0; i < 6; i++)
 		{
-			str += L"┃";
+			str += L"│";
 			for (int j = 0; j < 12; j++)
 			{
 				if (getCellState(board_AI, i, j))
-					str += L" O ┃";
+					str += L" O │";
 				else if (getCellState(board_Opp, i, j))
-					str += L" X ┃";
+					str += L" X │";
 				else
-					str += L"   ┃";
+					str += L"   │";
 			}
 			str += L"\n";
 			if (i == 5)
-				str += L"┗━━━┻━━━┻━━━┻━━━┻━━━┻━━━┻━━━┻━━━┻━━━┻━━━┻━━━┻━━━┛\n";
+				str += L"└───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┘\n";
 			else
-				str += L"┣━━━╋━━━╋━━━╋━━━╋━━━╋━━━╋━━━╋━━━╋━━━╋━━━╋━━━╋━━━┫\n";
+				str += L"├───┼───┼───┼───┼───┼───┼───┼───┼───┼───┼───┼───┤\n";
 		}
 		str += L"\n";
 		displayConsole(str);

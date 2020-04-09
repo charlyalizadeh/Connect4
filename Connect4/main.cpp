@@ -1,4 +1,3 @@
-#pragma once
 #include "minmax.hpp"
 
 using namespace std;
