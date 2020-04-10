@@ -4,7 +4,7 @@ using namespace std;
 
 int main()
 {
-	for (int i = 3; i < 7; i++) 
+	/*for (int i = 3; i < 7; i++) 
 	{
 		std::vector<uint8_t> moveOrder = { 0,1,2,3,4,5,6,7,8,9,10,11 };
 		std::cout << "-----TESTING DEPTH = " << i << "-----" << endl;
@@ -25,6 +25,8 @@ int main()
 			ai.gameAlone();
 		}
 		std::cout << "done !" << endl;
-	}
+	}*/
+	Connect4AI* ai = new Connect4AI();
+	ai->game();
 	return 0;
 }
