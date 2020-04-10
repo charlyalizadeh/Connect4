@@ -1,6 +1,7 @@
 ﻿#include "bitboard72.hpp"
 #include <algorithm>
 #include <chrono>
+#include <string>
 #include <vector>
 #include <fstream>
 
@@ -17,10 +18,11 @@ https://www.chessprogramming.org/Main_Page
 class Connect4AI
 {
 public:
-	Connect4AI(std::string _filename = "trash.txt", std::vector<uint8_t> _moveOrder = {6,5,7,4,8,3,9,2,10,1,0,11}, int _depth = 5) : m_board_AI(0, 0), m_board_Opp(0, 0), m_filename(_filename), m_moveOrder(_moveOrder), m_depth(_depth) {	}
+	Connect4AI(std::string _filename = "trash.txt", std::vector<uint8_t> _moveOrder = {6,5,7,4,8,3,9,2,10,1,0,11}, int _depth = 6) : m_filename(_filename), m_moveOrder(_moveOrder), m_depth(_depth) {	}
 	//AI vs Human
 	void game()
 	{
+    m_possibleCoord  = {5,5,5,5,5,5,5,5,5,5,5,5};
 		bitboard72 board_AI(0, 0);
 		bitboard72 board_Opp(0, 0);
 		std::wcout << L"Voulez vous commencer ? [y/n]";
@@ -28,7 +30,7 @@ public:
 		std::wcin >> choiceStart;
 		if (choiceStart == 'n')
 		{
-			board_AI = results(board_AI, bestMove(board_AI, board_Opp));
+			board_AI = results(board_AI, bestMove(board_AI, board_Opp,m_depth));
 		}
 		int choice = -1;
 		displayGameConsole(board_AI, board_Opp);
@@ -41,32 +43,36 @@ public:
 			} while (choice < 0 || choice >11);
 			board_Opp = results(board_Opp, choice);
 			displayGameConsole(board_AI, board_Opp);
-			board_AI = results(board_AI, bestMove(board_AI, board_Opp));
+			board_AI = results(board_AI, bestMove(board_AI, board_Opp,m_depth));
 			displayGameConsole(board_AI, board_Opp);
 		}
 	}
 	//AI vs AI (vs itself)
-	void gameAlone()
+	void gameAlone(int depth1 = 5,int depth2 = 5)
 	{
+    m_possibleCoord  = {5,5,5,5,5,5,5,5,5,5,5,5};
 		bitboard72 board_AI(0, 0);
 		bitboard72 board_Opp(0, 0);
+    m_movesSequences.clear();
+    m_times.clear();
 		uint8_t move;
 		char winner = '.';
+    m_possibleCoord =
 		while (!isTerminal(board_AI) && !isTerminal(board_Opp))
 		{
-			move = bestMove(board_Opp, board_AI);
+			move = bestMove(board_Opp, board_AI,depth1);
 			m_movesSequences.push_back(move);
 			board_Opp = results(board_Opp, move);
-			//displayGameConsole(board_AI, board_Opp);
+			displayGameConsole(board_AI, board_Opp);
 			if (isTerminal(board_Opp)) {
 				//std::wcout << "X Won";
 				winner = 'X';
 				break;
 			}
-			move = bestMove(board_AI, board_Opp);
+			move = bestMove(board_AI, board_Opp,depth2);
 			m_movesSequences.push_back(move);
 			board_AI = results(board_AI, move);
-			//displayGameConsole(board_AI, board_Opp);
+		  displayGameConsole(board_AI, board_Opp);
 			if (isTerminal(board_AI)) {
 				//std::wcout << "O Won";
 				winner = 'O';
@@ -76,11 +82,37 @@ public:
 		savePartyData(winner);
 	}
 
+    void simulateGames()
+    {
+       for(int i = 5;i<7;i++)
+       {
+         for(int j = 5;j<7;j++)
+         {
+           std::cout<<"------TESTING DEPTH : " + std::to_string(i) + " vs " + std::to_string(j) + "------------"<<std::endl;
+           std::cout<<"No order : ";
+           for(int k = 0;k<3;k++)
+           {
+             m_moveOrder = std::vector<uint8_t>{0,1,2,3,4,5,6,7,8,9,10,11};
+             m_filename = "test_" +  std::to_string(i) + "." + std::to_string(j) + ".txt";
+             gameAlone(i,j);
+             std::cout<<std::to_string(k);
+           }
+           std::cout<<std::endl<<"Ordered : ";
+           for(int k = 0;k<3;k++)
+           {
+             m_moveOrder = std::vector<uint8_t>{6,5,7,4,8,3,9,2,10,1,0,11};
+             m_filename = "test_" +  std::to_string(i) + "." + std::to_string(j) + "_Ordered" + ".txt";
+             gameAlone(i,j);
+             std::cout<< std::to_string(k);
+           }
+           std::cout<<std::endl;
+         }
+       }
+    }
+
 private:
 	//--------------------VARIABLES--------------------------
-	bitboard72 m_board_AI;//Bitboard containing the move of the AI
-	bitboard72 m_board_Opp;//Bitboard containing the move of the opponent
-	uint8_t m_possibleCoord[12] = { 5,5,5,5,5,5,5,5,5,5,5,5 };//We store the possible coordinates by row so we don't need to calculate each time we want to make move
+  std::vector<uint8_t> m_possibleCoord;//We store the possible coordinates by row so we don't need to calculate each time we want to make move
 	std::vector<uint8_t> m_moveOrder;
 	std::vector<int> m_times;
 	std::chrono::time_point<std::chrono::system_clock>m_start, m_end;
@@ -205,10 +237,10 @@ private:
 
 	}
 	//Return the best move for the player who own *board_AI* against the player who owns *board_opp*
-	uint8_t bestMove(bitboard72 board_AI, bitboard72 board_Opp)
+	uint8_t bestMove(bitboard72 board_AI, bitboard72 board_Opp,int depth)
 	{
 		m_start = std::chrono::system_clock::now();
-;		int bestMove = -1, bestValue = -100000, depth = m_depth;
+;		int bestMove = -1, bestValue = -100000; 
 		uint16_t childs = getRow(board_AI | board_Opp, 0);
 		for (int i = 0; i < 12; i++)
 		{
