@@ -5,6 +5,6 @@ using namespace std;
 int main()
 {
 	Connect4AI* ai = new Connect4AI();
-	ai->simulateGames();
+	ai->game();
 	return 0;
 }

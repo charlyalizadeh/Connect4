@@ -18,11 +18,12 @@ https://www.chessprogramming.org/Main_Page
 class Connect4AI
 {
 public:
-	Connect4AI(std::string _filename = "trash.txt", std::vector<uint8_t> _moveOrder = {6,5,7,4,8,3,9,2,10,1,0,11}, int _depth = 6) : m_filename(_filename), m_moveOrder(_moveOrder), m_depth(_depth) {	}
+	Connect4AI(int _depth = 6, std::string _filename = "trash.txt", std::vector<uint8_t> _moveOrder = { 6,5,7,4,8,3,9,2,10,1,0,11 }) :m_depth(_depth), m_filename(_filename), m_moveOrder(_moveOrder) {	}
 	//AI vs Human
 	void game()
 	{
-    m_possibleCoord  = {5,5,5,5,5,5,5,5,5,5,5,5};
+		//char winner = ' ';
+		m_possibleCoord = { 5,5,5,5,5,5,5,5,5,5,5,5 };
 		bitboard72 board_AI(0, 0);
 		bitboard72 board_Opp(0, 0);
 		std::wcout << L"Voulez vous commencer ? [y/n]";
@@ -30,10 +31,10 @@ public:
 		std::wcin >> choiceStart;
 		if (choiceStart == 'n')
 		{
-			board_AI = results(board_AI, bestMove(board_AI, board_Opp,m_depth));
+			board_AI = results(board_AI, bestMove(board_AI, board_Opp, m_depth));
 		}
 		int choice = -1;
-		displayGameConsole(board_AI, board_Opp);
+		//displayGameConsole(board_AI, board_Opp);
 		while (!isTerminal(board_AI) && !isTerminal(board_Opp))
 		{
 			do
@@ -42,37 +43,48 @@ public:
 				std::wcin >> choice;
 			} while (choice < 0 || choice >11);
 			board_Opp = results(board_Opp, choice);
-			displayGameConsole(board_AI, board_Opp);
-			board_AI = results(board_AI, bestMove(board_AI, board_Opp,m_depth));
-			displayGameConsole(board_AI, board_Opp);
+			if (isTerminal(board_Opp)) {
+				/*std::wcout << "X Won";
+				winner = 'X';*/
+				break;
+			}
+			//displayGameConsole(board_AI, board_Opp);
+			int bMove = bestMove(board_AI, board_Opp, m_depth);
+			std::wcout << bMove << std::endl;
+			board_AI = results(board_AI, bMove);
+			//displayGameConsole(board_AI, board_Opp);
+			if (isTerminal(board_AI)) {
+				/*std::wcout << "O Won";
+				winner = 'O';*/
+				break;
+			}
 		}
 	}
 	//AI vs AI (vs itself)
-	void gameAlone(int depth1 = 5,int depth2 = 5)
+	void gameAlone(int depth1 = 5, int depth2 = 5)
 	{
-    m_possibleCoord  = {5,5,5,5,5,5,5,5,5,5,5,5};
+		m_possibleCoord = { 5,5,5,5,5,5,5,5,5,5,5,5 };
 		bitboard72 board_AI(0, 0);
 		bitboard72 board_Opp(0, 0);
-    m_movesSequences.clear();
-    m_times.clear();
+		m_movesSequences.clear();
+		m_times.clear();
 		uint8_t move;
 		char winner = '.';
-    m_possibleCoord =
 		while (!isTerminal(board_AI) && !isTerminal(board_Opp))
 		{
-			move = bestMove(board_Opp, board_AI,depth1);
+			move = bestMove(board_Opp, board_AI, depth1);
 			m_movesSequences.push_back(move);
 			board_Opp = results(board_Opp, move);
-			displayGameConsole(board_AI, board_Opp);
+			//displayGameConsole(board_AI, board_Opp);
 			if (isTerminal(board_Opp)) {
 				//std::wcout << "X Won";
 				winner = 'X';
 				break;
 			}
-			move = bestMove(board_AI, board_Opp,depth2);
+			move = bestMove(board_AI, board_Opp, depth2);
 			m_movesSequences.push_back(move);
 			board_AI = results(board_AI, move);
-		  displayGameConsole(board_AI, board_Opp);
+			//displayGameConsole(board_AI, board_Opp);
 			if (isTerminal(board_AI)) {
 				//std::wcout << "O Won";
 				winner = 'O';
@@ -81,12 +93,12 @@ public:
 		}
 		savePartyData(winner);
 	}
-
+	//Simulate party of AI vs AI from depth 1 to depth 6
     void simulateGames()
     {
-       for(int i = 5;i<7;i++)
+       for(int i = 7;i<10;i++)
        {
-         for(int j = 5;j<7;j++)
+         for(int j = 1;j<7;j++)
          {
            std::cout<<"------TESTING DEPTH : " + std::to_string(i) + " vs " + std::to_string(j) + "------------"<<std::endl;
            std::cout<<"No order : ";
@@ -132,9 +144,9 @@ private:
 	int heuristic(bitboard72 board1,bitboard72 board2,int depth)
 	{	
 		if (isTerminal(board1))
-			return 10000 + depth;
+			return 90000 + depth;
 		if (isTerminal(board2))
-			return -10000 + (m_depth-depth);
+			return -90000 + (m_depth-depth);
 		else
 		{
 			return hasFollow3(board1, board2) * 5 + hasFollow2(board1, board2);
@@ -161,7 +173,7 @@ private:
 		bitboard128 preventBord(0xFFFFFFFFFFFFE001, 0x8004002001000);//This bitboard prevent for value not in the int he board to be count has valid
 		for (int i = 0; i < 4; i++)
 		{
-			bitboard72 test1 = ~board2 & (board1 >> directions[i])& (board1 >> directions[i] * 2)& (board1 >> directions[i] * 3) & ~preventBord;                   // |   | O | O | O |
+			bitboard72 test1 = ~board2 & (board1 >> directions[i])& (board1 >> directions[i] * 2)& (board1 >> directions[i] * 3) & ~preventBord;                    // |   | O | O | O |
 			bitboard72 test2 = board1 & (~(board2 >> directions[i]))& (board1 >> directions[i] * 2)& (board1 >> directions[i] * 3)& ~(preventBord>>directions[i]);  // | O |   | O | O |
 			bitboard72 test3 = board1 & (board1 >> directions[i])& (~(board2 >> directions[i] * 2))& (board1 >> directions[i] * 3)& ~(preventBord>>directions[i]*2);// | O | O |   | O |
 			bitboard72 test4 = board1 & (board1 >> directions[i])& (board1 >> directions[i] * 2)& (~(board2 >> directions[i] * 3))& ~(preventBord>>directions[i]*3);// | O | O | O |   |
@@ -246,7 +258,7 @@ private:
 		{
 			if (!((1 << m_moveOrder[i]) & childs))
 			{
-				int value = minmax(results(board_AI, m_moveOrder[i]), board_Opp, depth - 1, -10000, 10000, false);
+				int value = minmax(results(board_AI, m_moveOrder[i]), board_Opp, depth - 1, -100000, 100000, false);
 				//std::wcout << L"Move : " << moveOrder[i] << L" Value " << value << std::endl;
 				m_possibleCoord[m_moveOrder[i]]++;
 				if (value > bestValue)
