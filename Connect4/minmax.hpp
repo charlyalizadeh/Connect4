@@ -18,7 +18,7 @@ https://www.chessprogramming.org/Main_Page
 class Connect4AI
 {
 public:
-	Connect4AI(int _depth = 6, std::string _filename = "trash.txt", std::vector<uint8_t> _moveOrder = { 6,5,7,4,8,3,9,2,10,1,0,11 }) :m_depth(_depth), m_filename(_filename), m_moveOrder(_moveOrder) {	}
+	Connect4AI(int _depth = 5, std::string _filename = "trash.txt", std::vector<uint8_t> _moveOrder = { 6,5,7,4,8,3,9,2,10,1,0,11 }) :m_depth(_depth), m_filename(_filename), m_moveOrder(_moveOrder) {	}
 	//AI vs Human
 	void game()
 	{
@@ -26,12 +26,14 @@ public:
 		m_possibleCoord = { 5,5,5,5,5,5,5,5,5,5,5,5 };
 		bitboard72 board_AI(0, 0);
 		bitboard72 board_Opp(0, 0);
-		std::wcout << L"Voulez vous commencer ? [y/n]";
+		std::wcout << L"Voulez vous commencer ? [y/n]\n";
 		wchar_t choiceStart;
 		std::wcin >> choiceStart;
 		if (choiceStart == 'n')
 		{
-			board_AI = results(board_AI, bestMove(board_AI, board_Opp, m_depth));
+			int bMove = bestMove(board_AI, board_Opp, m_depth);
+			std::wcout << "." << bMove << "\n";
+			board_AI = results(board_AI, bMove);
 		}
 		int choice = -1;
 		//displayGameConsole(board_AI, board_Opp);
@@ -39,7 +41,7 @@ public:
 		{
 			do
 			{
-				std::wcout << L"Saisissez un coup : ";
+				std::wcout << L"Saisissez un coup : \n";
 				std::wcin >> choice;
 			} while (choice < 0 || choice >11);
 			board_Opp = results(board_Opp, choice);
@@ -50,7 +52,7 @@ public:
 			}
 			//displayGameConsole(board_AI, board_Opp);
 			int bMove = bestMove(board_AI, board_Opp, m_depth);
-			std::wcout << bMove << std::endl;
+			std::wcout << "." << bMove << "\n";
 			board_AI = results(board_AI, bMove);
 			//displayGameConsole(board_AI, board_Opp);
 			if (isTerminal(board_AI)) {
@@ -144,12 +146,12 @@ private:
 	int heuristic(bitboard72 board1,bitboard72 board2,int depth)
 	{	
 		if (isTerminal(board1))
-			return 90000 + depth;
-		if (isTerminal(board2))
-			return -90000 + (m_depth-depth);
+			return 900000 - depth;
+    if(isTerminal(board2))
+      return -900010 + depth;
 		else
 		{
-			return hasFollow3(board1, board2) * 5 + hasFollow2(board1, board2);
+			return (hasFollow3(board1, board2) * 5 + hasFollow2(board1, board2)) - ((hasFollow3(board2, board1) * 5 + hasFollow2(board2, board1)));
 		}
 
 	}
@@ -208,11 +210,11 @@ private:
 	{
 		//displayConsole(to_wstring(board_AI | board_Opp));
 		if (depth == 0 || isTerminal(board_AI) || isTerminal(board_Opp) || countCell(board_AI | board_Opp)>=42)
-			return heuristic(board_AI, board_Opp,depth) - heuristic(board_Opp,board_AI,depth);
+			return heuristic(board_AI, board_Opp,depth); 
 
 		if (player)
 		{
-			int value = -100000;
+			int value = -1000000;
 			uint16_t childs = getRow(board_AI | board_Opp, 0);
 			for (uint8_t i = 0; i < 12; i++)
 			{
@@ -229,7 +231,7 @@ private:
 		}
 		else
 		{
-			int value = 100000;
+			int value = 1000000;
 			uint16_t childs = getRow(board_AI | board_Opp, 0);
 			for (uint8_t i = 0; i < 12; i++)
 			{
@@ -252,14 +254,14 @@ private:
 	uint8_t bestMove(bitboard72 board_AI, bitboard72 board_Opp,int depth)
 	{
 		m_start = std::chrono::system_clock::now();
-;		int bestMove = -1, bestValue = -100000; 
+;		int bestMove = -1, bestValue = -1000000; 
 		uint16_t childs = getRow(board_AI | board_Opp, 0);
 		for (int i = 0; i < 12; i++)
 		{
 			if (!((1 << m_moveOrder[i]) & childs))
 			{
-				int value = minmax(results(board_AI, m_moveOrder[i]), board_Opp, depth - 1, -100000, 100000, false);
-				//std::wcout << L"Move : " << moveOrder[i] << L" Value " << value << std::endl;
+				int value = minmax(results(board_AI, m_moveOrder[i]), board_Opp, depth - 1, -1000000, 1000000, false);
+				std::wcout << L"Move : " << m_moveOrder[i] << L" Value " << value << std::endl;
 				m_possibleCoord[m_moveOrder[i]]++;
 				if (value > bestValue)
 				{
