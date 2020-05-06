@@ -317,7 +317,7 @@ private:
 		m_end = std::chrono::system_clock::now();
 		std::wcout << std::chrono::duration_cast<std::chrono::milliseconds>(m_end - m_start).count() << std::endl;
 		m_times.push_back(std::chrono::duration_cast<std::chrono::milliseconds>(m_end - m_start).count());
-		std::wcout << "Coup joué : " << std::to_wstring(bestMove + 1) << std::endl;
+		std::wcout << "Coup : " << std::to_wstring(bestMove + 1) << std::endl;
 		return bestMove;
 	}
 	//Save times, moves and winner of the party in a txt/csv file
@@ -444,7 +444,7 @@ private:
 		m_end = std::chrono::system_clock::now();
 		std::wcout << std::chrono::duration_cast<std::chrono::milliseconds>(m_end - m_start).count() << std::endl;
 		m_times.push_back(std::chrono::duration_cast<std::chrono::milliseconds>(m_end - m_start).count());
-		std::wcout << "Coup joué : " << std::to_wstring(bestMove + 1) << std::endl;
+		std::wcout << "Coup : " << std::to_wstring(bestMove + 1) << std::endl;
 		return bestMove;
 	}
 	
