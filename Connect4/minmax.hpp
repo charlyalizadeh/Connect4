@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include <thread>
+#include <future>
 
 /*Links that helped me : 
 http://www.informatik.uni-trier.de/~fernau/DSL0607/Masterthesis-Viergewinnt.pdf
@@ -18,8 +20,47 @@ https://www.chessprogramming.org/Main_Page
 class Connect4AI
 {
 public:
-	Connect4AI(int _depth = 5, std::string _filename = "trash.txt", std::vector<uint8_t> _moveOrder = { 6,5,7,4,8,3,9,2,10,1,0,11 }) :m_depth(_depth), m_filename(_filename), m_moveOrder(_moveOrder) {	}
+	Connect4AI(int _depth = 6, std::string _filename = "trash.txt", std::vector<uint8_t> _moveOrder = { 6,5,7,4,8,3,9,2,10,1,0,11 }) :m_depth(_depth), m_filename(_filename), m_moveOrder(_moveOrder) {	}
 	//AI vs Human
+	void gameMT()
+	{
+		//char winner = ' ';
+		m_possibleCoord = { 5,5,5,5,5,5,5,5,5,5,5,5 };
+		bitboard72 board_AI(0, 0);
+		bitboard72 board_Opp(0, 0);
+		std::wcout << L"Voulez vous commencer ? [y/n]\n";
+		wchar_t choiceStart;
+		std::wcin >> choiceStart;
+		if (choiceStart == 'n')
+		{
+			board_AI = results(board_AI, bestMoveMT(board_AI, board_Opp, m_depth, m_possibleCoord));
+		}
+		int choice = -1;
+		displayGameConsole(board_AI, board_Opp);
+		while (!isTerminal(board_AI) && !isTerminal(board_Opp))
+		{
+			do
+			{
+				std::wcout << L"Saisissez un coup : \n";
+				std::wcin >> choice;
+			} while (choice < 1 || choice >12  && getRow(board_AI & board_Opp, 0));
+			board_Opp = results(board_Opp, choice - 1);
+			if (isTerminal(board_Opp)) {
+				std::wcout << "X Won";
+				/*winner = 'X';*/
+				break;
+			}
+			displayGameConsole(board_AI, board_Opp);
+			board_AI = results(board_AI, bestMoveMT(board_AI, board_Opp, m_depth, m_possibleCoord));
+			displayGameConsole(board_AI, board_Opp);
+			if (isTerminal(board_AI)) 
+			{
+				std::wcout << "O Won";
+				/*winner = 'O';*/
+				break;
+			}
+		}
+	}
 	void game()
 	{
 		//char winner = ' ';
@@ -31,39 +72,36 @@ public:
 		std::wcin >> choiceStart;
 		if (choiceStart == 'n')
 		{
-			int bMove = bestMove(board_AI, board_Opp, m_depth);
-			std::wcout << "." << bMove << "\n";
-			board_AI = results(board_AI, bMove);
+			board_AI = results(board_AI, bestMove(board_AI, board_Opp, m_depth));
 		}
 		int choice = -1;
-		//displayGameConsole(board_AI, board_Opp);
+		displayGameConsole(board_AI, board_Opp);
 		while (!isTerminal(board_AI) && !isTerminal(board_Opp))
 		{
 			do
 			{
 				std::wcout << L"Saisissez un coup : \n";
 				std::wcin >> choice;
-			} while (choice < 0 || choice >11);
-			board_Opp = results(board_Opp, choice);
+			} while (choice < 1 || choice >12 && getRow(board_AI & board_Opp, 0));
+			board_Opp = results(board_Opp, choice - 1);
 			if (isTerminal(board_Opp)) {
-				/*std::wcout << "X Won";
-				winner = 'X';*/
+				std::wcout << "X Won";
+				/*winner = 'X';*/
 				break;
 			}
-			//displayGameConsole(board_AI, board_Opp);
-			int bMove = bestMove(board_AI, board_Opp, m_depth);
-			std::wcout << "." << bMove << "\n";
-			board_AI = results(board_AI, bMove);
-			//displayGameConsole(board_AI, board_Opp);
-			if (isTerminal(board_AI)) {
-				/*std::wcout << "O Won";
-				winner = 'O';*/
+			displayGameConsole(board_AI, board_Opp);
+			board_AI = results(board_AI, bestMove(board_AI, board_Opp, m_depth));
+			displayGameConsole(board_AI, board_Opp);
+			if (isTerminal(board_AI))
+			{
+				std::wcout << "O Won";
+				/*winner = 'O';*/
 				break;
 			}
 		}
 	}
 	//AI vs AI (vs itself)
-	void gameAlone(int depth1 = 5, int depth2 = 5)
+	void gameAlone(int depth1 = 6, int depth2 = 6)
 	{
 		m_possibleCoord = { 5,5,5,5,5,5,5,5,5,5,5,5 };
 		bitboard72 board_AI(0, 0);
@@ -74,33 +112,37 @@ public:
 		char winner = '.';
 		while (!isTerminal(board_AI) && !isTerminal(board_Opp))
 		{
-			move = bestMove(board_Opp, board_AI, depth1);
+			move = bestMoveMT(board_Opp, board_AI, depth1, m_possibleCoord);
 			m_movesSequences.push_back(move);
 			board_Opp = results(board_Opp, move);
-			//displayGameConsole(board_AI, board_Opp);
+			displayGameConsole(board_AI, board_Opp);
 			if (isTerminal(board_Opp)) {
-				//std::wcout << "X Won";
+				std::wcout << "X Won";
 				winner = 'X';
 				break;
 			}
-			move = bestMove(board_AI, board_Opp, depth2);
+			move = bestMoveMT(board_AI, board_Opp, depth2, m_possibleCoord);
 			m_movesSequences.push_back(move);
 			board_AI = results(board_AI, move);
-			//displayGameConsole(board_AI, board_Opp);
+			displayGameConsole(board_AI, board_Opp);
 			if (isTerminal(board_AI)) {
-				//std::wcout << "O Won";
+				std::wcout << "O Won";
 				winner = 'O';
 				break;
 			}
+		}
+		for (int i = 0; i < m_possibleCoord.size(); i++)
+		{
+			std::wcout << "Colonne : " << i+1 << " Value : " << m_possibleCoord[i] << std::endl;
 		}
 		savePartyData(winner);
 	}
 	//Simulate party of AI vs AI from depth 1 to depth 6
     void simulateGames()
     {
-       for(int i = 7;i<10;i++)
+       for(int i = 1;i<10;i++)
        {
-         for(int j = 1;j<7;j++)
+         for(int j = 1;j<10;j++)
          {
            std::cout<<"------TESTING DEPTH : " + std::to_string(i) + " vs " + std::to_string(j) + "------------"<<std::endl;
            std::cout<<"No order : ";
@@ -124,10 +166,12 @@ public:
        }
     }
 
+
+
 private:
 	//--------------------VARIABLES--------------------------
-  std::vector<uint8_t> m_possibleCoord;//We store the possible coordinates by row so we don't need to calculate each time we want to make move
-	std::vector<uint8_t> m_moveOrder;
+	std::vector<int> m_possibleCoord;//We store the possible coordinates by row so we don't need to calculate each time we want to make move
+	std::vector<uint8_t> m_moveOrder;//Order of the move check
 	std::vector<int> m_times;
 	std::chrono::time_point<std::chrono::system_clock>m_start, m_end;
 	std::string m_filename;
@@ -142,16 +186,16 @@ private:
 		m_possibleCoord[col]--;
 		return setCellState(board, temp, col);
 	}
-	//Return a value corresponding to the quality of the board for the player which own the *baord1*. I'm not sure if the depth really changes something, I'll try some test later
-	int heuristic(bitboard72 board1,bitboard72 board2,int depth)
-	{	
+	//Return a value corresponding to the quality of the board for the player which own the *board1*. 
+	int heuristic(bitboard72 board1, bitboard72 board2, int depth, int coeff3 = 5,int coeff2 = 1)
+	{
 		if (isTerminal(board1))
-			return 900000 - depth;
-    if(isTerminal(board2))
-      return -900010 + depth;
+			return 900000 + depth;
+		if (isTerminal(board2))
+			return -900010 - depth;
 		else
 		{
-			return (hasFollow3(board1, board2) * 5 + hasFollow2(board1, board2)) - ((hasFollow3(board2, board1) * 5 + hasFollow2(board2, board1)));
+			return ((hasFollow3(board1, board2)) * coeff3 + hasFollow2(board1, board2)) * coeff2 - ((hasFollow3(board2, board1) * coeff3 + hasFollow2(board2, board1) * coeff2));
 		}
 
 	}
@@ -254,13 +298,13 @@ private:
 	uint8_t bestMove(bitboard72 board_AI, bitboard72 board_Opp,int depth)
 	{
 		m_start = std::chrono::system_clock::now();
-;		int bestMove = -1, bestValue = -1000000; 
+		int bestMove = -1, bestValue = -1000000; 
 		uint16_t childs = getRow(board_AI | board_Opp, 0);
 		for (int i = 0; i < 12; i++)
 		{
 			if (!((1 << m_moveOrder[i]) & childs))
 			{
-				int value = minmax(results(board_AI, m_moveOrder[i]), board_Opp, depth - 1, -1000000, 1000000, false);
+				int value = minmax(results(board_AI, m_moveOrder[i]), board_Opp, depth, -1000000, 1000000, false);
 				std::wcout << L"Move : " << m_moveOrder[i] << L" Value " << value << std::endl;
 				m_possibleCoord[m_moveOrder[i]]++;
 				if (value > bestValue)
@@ -271,7 +315,9 @@ private:
 			}
 		}
 		m_end = std::chrono::system_clock::now();
+		std::wcout << std::chrono::duration_cast<std::chrono::milliseconds>(m_end - m_start).count() << std::endl;
 		m_times.push_back(std::chrono::duration_cast<std::chrono::milliseconds>(m_end - m_start).count());
+		std::wcout << "Coup joué : " << std::to_wstring(bestMove + 1) << std::endl;
 		return bestMove;
 	}
 	//Save times, moves and winner of the party in a txt/csv file
@@ -281,21 +327,20 @@ private:
 		if (wStream)
 		{
 			for(int i = 0;i<m_times.size();i++)
-			{
 				wStream << std::to_string(m_times[i]) << ';';
-			}
+
 			wStream << std::endl;
+
 			for(int i = 0;i<m_movesSequences.size();i++)
-			{
 				wStream << std::to_string(m_movesSequences[i]) << ';';
-			}
+
 			wStream << std::endl << winner << ';' << std::endl;
 		}
 	}
 	//Display the game in the console. AI = O, Opponent = X
 	void displayGameConsole(bitboard72 board_AI, bitboard72 board_Opp)
 	{
-		std::wstring str = L" 0  1  2  3  4  5  6  7  8  9  10 11\n";
+		std::wstring str = L" 1  2  3  4  5  6  7  8  9  10  11 12\n";
 		for (int i = 0; i < 6; i++)
 		{
 			for (int j = 0; j < 12; j++)
@@ -312,6 +357,97 @@ private:
 		str += L"\n";
 		displayConsole(str);
 	}
+
+
+
+
+	//-----MULTI THREADING-------
+	bitboard72 resultsMT(bitboard72 board, uint8_t col, std::vector<int>& possibleCoord)
+	{
+		uint8_t temp = possibleCoord[col];
+		possibleCoord[col]--;
+		return setCellState(board, temp, col);
+	}
+	int minmaxMT(bitboard72 board_AI, bitboard72 board_Opp, int depth, int alpha, int beta, bool player, std::vector<int>& possibleCoord)
+	{
+		if (depth == 0 || isTerminal(board_AI) || isTerminal(board_Opp) || countCell(board_AI | board_Opp) >= 42)
+			return heuristic(board_AI, board_Opp, depth);
+
+		if (player)
+		{
+			int value = -1000000;
+			uint16_t childs = getRow(board_AI | board_Opp, 0);
+			for (uint8_t i = 0; i < 12; i++)
+			{
+				if (!((1 << m_moveOrder[i]) & childs))
+				{
+					value = std::max(value, minmaxMT(resultsMT(board_AI, m_moveOrder[i], possibleCoord), board_Opp, depth - 1, alpha, beta, !player, possibleCoord));
+					possibleCoord[m_moveOrder[i]]++;
+					if (value >= beta)
+						return value;
+					alpha = std::max(alpha, value);
+				}
+			}
+			return value;
+		}
+		else
+		{
+			int value = 1000000;
+			uint16_t childs = getRow(board_AI | board_Opp, 0);
+			for (uint8_t i = 0; i < 12; i++)
+			{
+				if (!((1 << m_moveOrder[i]) & childs))
+				{
+					value = std::min(value, minmaxMT(board_AI, resultsMT(board_Opp, m_moveOrder[i], possibleCoord), depth - 1, alpha, beta, !player, possibleCoord));
+					possibleCoord[m_moveOrder[i]]++;
+					if (value <= alpha)
+						return value;
+					beta = std::min(beta, value);
+				}
+			}
+			return value;
+		}
+
+
+
+	}
+	uint8_t bestMoveMT(bitboard72 board_AI, bitboard72 board_Opp, int depth, std::vector<int> possibleCoord)
+	{
+		m_start = std::chrono::system_clock::now();
+		int bestMove = -1, bestValue = -1000000;
+		uint16_t childs = getRow(board_AI | board_Opp, 0);
+		std::vector<std::future<int>> futures;
+		std::vector<int> index;
+		for (int i = 0; i < 12; i++)
+		{
+			if (!((1 << m_moveOrder[i]) & childs))
+			{
+				std::vector<int> possibleCoordTemp = possibleCoord;
+				futures.push_back(std::async(std::launch::async, 
+					[this](bitboard72 board_AI, bitboard72 board_Opp, int depth, int alpha, int beta, bool player, std::vector <int> possibleCoord)
+					{return minmaxMT(board_AI, board_Opp, depth, alpha, beta, player, possibleCoord); },
+						resultsMT(board_AI, m_moveOrder[i], possibleCoordTemp), board_Opp, depth, -1000000, 1000000, false, possibleCoordTemp));
+				index.push_back(m_moveOrder[i]);
+			}
+		}
+		int i = 0;
+		for (auto &a : futures)
+		{
+			int temp = a.get();
+			std::wcout << L"Move : " << index[i] << L" Value : " << temp << std::endl;
+			if (temp > bestValue) {
+				bestMove = index[i];
+				bestValue = temp;
+			}
+			i++;
+		}
+		m_end = std::chrono::system_clock::now();
+		std::wcout << std::chrono::duration_cast<std::chrono::milliseconds>(m_end - m_start).count() << std::endl;
+		m_times.push_back(std::chrono::duration_cast<std::chrono::milliseconds>(m_end - m_start).count());
+		std::wcout << "Coup joué : " << std::to_wstring(bestMove + 1) << std::endl;
+		return bestMove;
+	}
+	
 };
 
 

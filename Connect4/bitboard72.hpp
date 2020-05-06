@@ -246,6 +246,7 @@ uint16_t getRow(const bitboard72& board, uint8_t row)
 }
 
 
+
 //Display Method, not a good one, it's for the development 
 std::wstring to_wstring(const bitboard72& board)
 {

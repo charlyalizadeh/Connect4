@@ -1,10 +1,11 @@
-#include "minmax.hpp"
+#define OLC_PGE_APPLICATION
+#include "engine.hpp"
 
-using namespace std;
+
 
 int main()
 {
-	Connect4AI* ai = new Connect4AI(7);
-	ai->game();
+	Connect4AI* game = new Connect4AI(7);
+	game->simulateGames();
 	return 0;
 }
