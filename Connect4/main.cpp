@@ -1,4 +1,3 @@
-#define OLC_PGE_APPLICATION
 #include "minmax.hpp"
 
 int main()
