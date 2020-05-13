@@ -1,7 +1,6 @@
 ﻿#include <cstdint>
 #include <string>
 #include <iostream>
-#include <fcntl.h>
 
 //This is a mess but I'll try to comment in a way that it's undersandable
 
@@ -87,9 +86,6 @@ struct bitboard72
 	{
 		return part64bit != 0L || part16bit != 0L;
 	}
-
-
-
 	void operator|=(const bitboard72& rhs)
 	{
 		this->part16bit |= rhs.part16bit;
@@ -105,8 +101,6 @@ struct bitboard72
 		this->part16bit ^= rhs.part16bit;
 		this->part64bit ^= rhs.part64bit;
 	}
-
-
 };
 
 //bitboard72 operators
@@ -245,13 +239,11 @@ uint16_t getRow(const bitboard72& board, uint8_t row)
 	}
 }
 
-
-
 //Display Method, not a good one, it's for the development 
 std::wstring to_wstring(const bitboard72& board)
 {
-	std::wstring str = L"    0   1   2   3   4   5   6   7   8   9  10  11  \n";
-	str += L"  ┌───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┐\n";
+	std::wstring str = L"    1   2   3   4   5   6   7   8   9   10  11  12  \n";
+	str += L"  +---+---+---+---+---+---+---+---+---+---+---+---+\n";
 	for (int i = 0; i < 6; i++)
 	{
 		str += (std::to_wstring(i) + L" │");
@@ -263,9 +255,9 @@ std::wstring to_wstring(const bitboard72& board)
 				str += L" 0 │";
 		}
 		if (i == 5)
-			str += L"\n  └───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┘\n";
+			str += L"\n  +---+---+---+---+---+---+---+---+---+---+---+---+\n";
 		else
-			str += L"\n  ├───┼───┼───┼───┼───┼───┼───┼───┼───┼───┼───┼───┤\n";
+			str += L"\n  +---+---+---+---+---+---+---+---+---+---+---+---+\n";
 	}
 	str += L"\n";
 	return str;

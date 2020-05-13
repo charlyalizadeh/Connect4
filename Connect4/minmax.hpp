@@ -1,5 +1,4 @@
 ﻿#include "bitboard72.hpp"
-#include <algorithm>
 #include <chrono>
 #include <string>
 #include <vector>
@@ -21,6 +20,7 @@ class Connect4AI
 {
 public:
 	Connect4AI(int _depth = 6, std::string _filename = "trash.txt", std::vector<uint8_t> _moveOrder = { 6,5,7,4,8,3,9,2,10,1,0,11 }) :m_depth(_depth), m_filename(_filename), m_moveOrder(_moveOrder) {	}
+	
 	//AI vs Human
 	void gameMT()
 	{
@@ -53,7 +53,7 @@ public:
 			displayGameConsole(board_AI, board_Opp);
 			board_AI = results(board_AI, bestMoveMT(board_AI, board_Opp, m_depth, m_possibleCoord));
 			displayGameConsole(board_AI, board_Opp);
-			if (isTerminal(board_AI)) 
+			if (isTerminal(board_AI))
 			{
 				std::wcout << "O Won";
 				/*winner = 'O';*/
@@ -100,8 +100,9 @@ public:
 			}
 		}
 	}
+
 	//AI vs AI (vs itself)
-	void gameAlone(int depth1 = 6, int depth2 = 6)
+	void gameAlone(int depth1 = 6, int depth2 = 6,bool display = true)
 	{
 		m_possibleCoord = { 5,5,5,5,5,5,5,5,5,5,5,5 };
 		bitboard72 board_AI(0, 0);
@@ -115,34 +116,33 @@ public:
 			move = bestMoveMT(board_Opp, board_AI, depth1, m_possibleCoord);
 			m_movesSequences.push_back(move);
 			board_Opp = results(board_Opp, move);
-			displayGameConsole(board_AI, board_Opp);
+			if (display)
+				displayGameConsole(board_AI, board_Opp);
 			if (isTerminal(board_Opp)) {
-				std::wcout << "X Won";
+				//td::wcout << "X Won";
 				winner = 'X';
 				break;
 			}
 			move = bestMoveMT(board_AI, board_Opp, depth2, m_possibleCoord);
 			m_movesSequences.push_back(move);
 			board_AI = results(board_AI, move);
-			displayGameConsole(board_AI, board_Opp);
+			if (display)
+				displayGameConsole(board_AI, board_Opp);
 			if (isTerminal(board_AI)) {
-				std::wcout << "O Won";
+				//std::wcout << "O Won";
 				winner = 'O';
 				break;
 			}
 		}
-		for (int i = 0; i < m_possibleCoord.size(); i++)
-		{
-			std::wcout << "Colonne : " << i+1 << " Value : " << m_possibleCoord[i] << std::endl;
-		}
 		savePartyData(winner);
 	}
+
 	//Simulate party of AI vs AI from depth 1 to depth 6
     void simulateGames()
     {
-       for(int i = 1;i<10;i++)
+       for(int i = 1;i<7;i++)
        {
-         for(int j = 1;j<10;j++)
+         for(int j = 1;j<7;j++)
          {
            std::cout<<"------TESTING DEPTH : " + std::to_string(i) + " vs " + std::to_string(j) + "------------"<<std::endl;
            std::cout<<"No order : ";
@@ -150,7 +150,7 @@ public:
            {
              m_moveOrder = std::vector<uint8_t>{0,1,2,3,4,5,6,7,8,9,10,11};
              m_filename = "test_" +  std::to_string(i) + "." + std::to_string(j) + ".txt";
-             gameAlone(i,j);
+             gameAlone(i,j,false);
              std::cout<<std::to_string(k);
            }
            std::cout<<std::endl<<"Ordered : ";
@@ -158,7 +158,7 @@ public:
            {
              m_moveOrder = std::vector<uint8_t>{6,5,7,4,8,3,9,2,10,1,0,11};
              m_filename = "test_" +  std::to_string(i) + "." + std::to_string(j) + "_Ordered" + ".txt";
-             gameAlone(i,j);
+             gameAlone(i,j,false);
              std::cout<< std::to_string(k);
            }
            std::cout<<std::endl;
@@ -179,13 +179,6 @@ private:
 	int m_depth;
 
 	//--------------------METHODS--------------------------
-	//Return a bitboard equal to board with a 1 in the highest coordinates of the column *col*
-	bitboard72 results(bitboard72 board, uint8_t col)
-	{
-		uint8_t temp = m_possibleCoord[col];
-		m_possibleCoord[col]--;
-		return setCellState(board, temp, col);
-	}
 	//Return a value corresponding to the quality of the board for the player which own the *board1*. 
 	int heuristic(bitboard72 board1, bitboard72 board2, int depth, int coeff3 = 5,int coeff2 = 1)
 	{
@@ -210,13 +203,13 @@ private:
 		}
 		return false;
 	}
-	//The two following methods are kind of messy. They search the number of sequences that aren't blocked by the opponent. 
+	//The two following methods are little bit messy. They search the number of sequences that aren't blocked by the opponent. 
 	//Return the number of good three 1 in a row,column and diagonal
 	int hasFollow3(bitboard72 board1,bitboard72 board2)
 	{
 		int directions[4] = { 1,13,12,14 };
 		int count = 0;
-		bitboard128 preventBord(0xFFFFFFFFFFFFE001, 0x8004002001000);//This bitboard prevent for value not in the int he board to be count has valid
+		bitboard128 preventBord(0xFFFFFFFFFFFFE001, 0x8004002001000);//This bitboard prevent for value not in the in the board to be count as valid
 		for (int i = 0; i < 4; i++)
 		{
 			bitboard72 test1 = ~board2 & (board1 >> directions[i])& (board1 >> directions[i] * 2)& (board1 >> directions[i] * 3) & ~preventBord;                    // |   | O | O | O |
@@ -224,10 +217,6 @@ private:
 			bitboard72 test3 = board1 & (board1 >> directions[i])& (~(board2 >> directions[i] * 2))& (board1 >> directions[i] * 3)& ~(preventBord>>directions[i]*2);// | O | O |   | O |
 			bitboard72 test4 = board1 & (board1 >> directions[i])& (board1 >> directions[i] * 2)& (~(board2 >> directions[i] * 3))& ~(preventBord>>directions[i]*3);// | O | O | O |   |
 			count += countCell(test1 | test2 | test3 | test4);
-			/*if (board1 & (board1 >> directions[i])& (board1 >> directions[i] * 2)^ (board2 >> directions[i] * 3))
-				return true;
-			if (board2 ^ (board1 >> directions[i])& (board1 >> directions[i] * 2)& (board1 >> directions[i] * 3))
-				return true;*/
 		}
 		return count;
 	}
@@ -248,6 +237,15 @@ private:
 				count += countCell(test1 | test2 | test3 | test4 | test5 | test6);
 		}
 		return count;
+	}
+
+	//-----WITHOUT MULTI THREADING-------
+	//Return a bitboard equal to board with a 1 in the highest coordinates of the column *col*
+	bitboard72 results(bitboard72 board, uint8_t col)
+	{
+		uint8_t temp = m_possibleCoord[col];
+		m_possibleCoord[col]--;
+		return setCellState(board, temp, col);
 	}
 	//The minmax algorithm
 	int minmax(bitboard72 board_AI, bitboard72 board_Opp, int depth, int alpha, int beta, bool player)
@@ -320,54 +318,17 @@ private:
 		std::wcout << "Coup : " << std::to_wstring(bestMove + 1) << std::endl;
 		return bestMove;
 	}
-	//Save times, moves and winner of the party in a txt/csv file
-	void savePartyData(char winner)
-	{
-		std::ofstream wStream(m_filename.c_str(), std::ios::app);
-		if (wStream)
-		{
-			for(int i = 0;i<m_times.size();i++)
-				wStream << std::to_string(m_times[i]) << ';';
-
-			wStream << std::endl;
-
-			for(int i = 0;i<m_movesSequences.size();i++)
-				wStream << std::to_string(m_movesSequences[i]) << ';';
-
-			wStream << std::endl << winner << ';' << std::endl;
-		}
-	}
-	//Display the game in the console. AI = O, Opponent = X
-	void displayGameConsole(bitboard72 board_AI, bitboard72 board_Opp)
-	{
-		std::wstring str = L" 1  2  3  4  5  6  7  8  9  10  11 12\n";
-		for (int i = 0; i < 6; i++)
-		{
-			for (int j = 0; j < 12; j++)
-			{
-				if (getCellState(board_AI, i, j))
-					str += L" O ";
-				else if (getCellState(board_Opp, i, j))
-					str += L" X ";
-				else
-					str += L" . ";
-			}
-			str += L"\n";
-		}
-		str += L"\n";
-		displayConsole(str);
-	}
-
-
 
 
 	//-----MULTI THREADING-------
+	//Return a bitboard equal to board with a 1 in the highest coordinates of the column *col*
 	bitboard72 resultsMT(bitboard72 board, uint8_t col, std::vector<int>& possibleCoord)
 	{
 		uint8_t temp = possibleCoord[col];
 		possibleCoord[col]--;
 		return setCellState(board, temp, col);
 	}
+	//The minmax algorithm
 	int minmaxMT(bitboard72 board_AI, bitboard72 board_Opp, int depth, int alpha, int beta, bool player, std::vector<int>& possibleCoord)
 	{
 		if (depth == 0 || isTerminal(board_AI) || isTerminal(board_Opp) || countCell(board_AI | board_Opp) >= 42)
@@ -411,6 +372,7 @@ private:
 
 
 	}
+	//Return the best move for the player who own *board_AI* against the player who owns *board_opp*
 	uint8_t bestMoveMT(bitboard72 board_AI, bitboard72 board_Opp, int depth, std::vector<int> possibleCoord)
 	{
 		m_start = std::chrono::system_clock::now();
@@ -440,6 +402,13 @@ private:
 				bestValue = temp;
 			}
 			i++;
+			std::chrono::time_point<std::chrono::system_clock>m_temp = std::chrono::system_clock::now();
+			if (std::chrono::duration_cast<std::chrono::milliseconds>(m_temp - m_start).count() > 8500)
+			{
+				if (bestValue < -900000)//Kind of a hopeless situation here
+					bestMove = index[i];
+				break;
+			}
 		}
 		m_end = std::chrono::system_clock::now();
 		std::wcout << std::chrono::duration_cast<std::chrono::milliseconds>(m_end - m_start).count() << std::endl;
@@ -447,6 +416,45 @@ private:
 		std::wcout << "Coup : " << std::to_wstring(bestMove + 1) << std::endl;
 		return bestMove;
 	}
+
+	//Save times, moves and winner of the party in a txt/csv file
+	void savePartyData(char winner)
+	{
+		std::ofstream wStream(m_filename.c_str(), std::ios::app);
+		if (wStream)
+		{
+			for (int i = 0; i < m_times.size(); i++)
+				wStream << std::to_string(m_times[i]) << ';';
+
+			wStream << std::endl;
+
+			for (int i = 0; i < m_movesSequences.size(); i++)
+				wStream << std::to_string(m_movesSequences[i]) << ';';
+
+			wStream << std::endl << winner << ';' << std::endl;
+		}
+	}
+	//Display the game in the console. AI = O, Opponent = X
+	void displayGameConsole(bitboard72 board_AI, bitboard72 board_Opp)
+	{
+		std::wstring str = L" 1  2  3  4  5  6  7  8  9  10  11 12\n";
+		for (int i = 0; i < 6; i++)
+		{
+			for (int j = 0; j < 12; j++)
+			{
+				if (getCellState(board_AI, i, j))
+					str += L" O ";
+				else if (getCellState(board_Opp, i, j))
+					str += L" X ";
+				else
+					str += L" . ";
+			}
+			str += L"\n";
+		}
+		str += L"\n";
+		displayConsole(str);
+	}
+
 	
 };
 
