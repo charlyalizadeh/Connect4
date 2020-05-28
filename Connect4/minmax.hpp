@@ -180,7 +180,7 @@ private:
 
 	//--------------------METHODS--------------------------
 	//Return a value corresponding to the quality of the board for the player which own the *board1*. 
-	int heuristic(bitboard72 board1, bitboard72 board2, int depth, int coeff3 = 5,int coeff2 = 1)
+	int heuristic(bitboard72 board1, bitboard72 board2, int depth, int coeff3 = 6,int coeff2 = 2)
 	{
 		if (isTerminal(board1))
 			return 900000 + depth;
